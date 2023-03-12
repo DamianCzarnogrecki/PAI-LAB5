@@ -1,0 +1,75 @@
+﻿@page "/wrzucanie"
+@inject HttpClient Http
+@inject InterfejsSerwisuUzytkownika Serwis
+@using LAB1.Shared
+@using System.Net.Http.Headers
+
+<PageTitle>WRZUCANIE PLIKU</PageTitle>
+<MudText Typo="Typo.h6">Wrzucanie danych z pliku do bazy:</MudText>
+<InputFile OnChange="@DodaniePliku" id="wrzucanie" multiple hidden />
+<MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Filled.CloudUpload" for="wrzucanie">
+    WRZUĆ PLIK
+</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="Dobazy">ZATWIERDŹ WRZUCENIE DO BAZY</MudButton>
+<br />
+<br />
+@if (informacjaZwrotna != "")
+{
+    <MudChip Variant="Variant.Text" Color="Color.Secondary">@informacjaZwrotna</MudChip>
+}
+
+@if (nazwyPlikow.Count > 0)
+{
+    <ul>
+        @foreach (var nazwa in nazwyPlikow)
+        {
+            <li>@nazwa</li>
+        }
+    </ul>
+}
+
+@code {
+    public string informacjaZwrotna = "";
+    private List<string> nazwyPlikow = new();
+    private List<PlikOdUzytkownika> wrzuconePliki = new();
+
+    private async Task DodaniePliku(InputFileChangeEventArgs e)
+    {
+        using var datacontent = new MultipartFormDataContent();
+
+        try{
+            foreach (var plik in e.GetMultipleFiles(100)) //100 plikow na raz maks
+            {
+                if (plik.Name.EndsWith(".csv"))
+                {
+                    var zawartoscPliku = new StreamContent(plik.OpenReadStream(1000000000)); //125MB na raz maks
+                    zawartoscPliku.Headers.ContentType = new MediaTypeHeaderValue(plik.ContentType);
+                    nazwyPlikow.Add(plik.Name);
+                    datacontent.Add(content: zawartoscPliku, name: "\"files\"", fileName: plik.Name);
+                }
+                else
+                {
+                    informacjaZwrotna = "Błąd wrzucenia pliku – plik musi mieć rozszerzenie .csv";
+                    return;
+                }
+            }
+        }
+        catch(Exception error)
+        {
+            informacjaZwrotna = "Błąd wrzucenia pliku – maksymalny rozmiar plików to 125MB, maksymalna liczba wrzuconych plików to 100.";
+        }
+
+        var odpowiedz = await Http.PostAsync("/api/plik/NaSerwer", datacontent);
+        var wynik = await odpowiedz.Content.ReadFromJsonAsync<List<PlikOdUzytkownika>>();
+
+        if (wynik is not null)
+            wrzuconePliki = wrzuconePliki.Concat(wynik).ToList();
+    }
+
+    private async Task Dobazy()
+    {
+        using var datacontent = new MultipartFormDataContent();
+        var odpowiedz = await Http.PostAsync("/api/plik/DoBazy", datacontent);
+        informacjaZwrotna = await odpowiedz.Content.ReadAsStringAsync();
+    }
+}

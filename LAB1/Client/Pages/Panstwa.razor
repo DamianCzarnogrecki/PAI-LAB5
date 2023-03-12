@@ -1,0 +1,57 @@
+﻿@page "/"
+@inject InterfejsSerwisuPanstwa Serwis
+@inject InterfejsSerwisuUzytkownika SerwisUzytkownika
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using System.Data;
+@using System.IO;
+@using System.Diagnostics;
+@using Microsoft.AspNetCore.Http;
+@using System.Net.Http.Headers;
+
+<PageTitle>PAŃSTWA</PageTitle>
+
+<MudTable Items="Serwis.Panstwa" Hover="true" Striped="true" Dense="true" Class="mb-2">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<Panstwo, object>(x=>x.ID)">ID</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Panstwo, object>(x=>x.NazwaPowszechna)">NAZWA POWSZECHNA</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Panstwo, object>(x=>x.NazwaOficjalna)">NAZWA OFICJALNA</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Panstwo, object>(x=>x.KodISO3166)">KOD ISO3166</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Panstwo, object>(x=>x.TypRzadu)">TYP RZĄDU</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Panstwo, object>(x=>x.LiczbaObywateli)">LICZBA OBYWATELI</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Panstwo, object>(x=>x.HDI)">HDI</MudTableSortLabel></MudTh>
+        <MudTh>FLAGA</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+            <MudTd DataLabel="ID">@context.ID</MudTd>
+            <MudTd DataLabel="Nazwa powszechna">@context.NazwaPowszechna</MudTd>
+            <MudTd DataLabel="Nazwa oficjalna">@context.NazwaOficjalna</MudTd>
+            <MudTd DataLabel="Kod ISO3166">@context.KodISO3166</MudTd>
+            <MudTd DataLabel="Typ rządu">@context.TypRzadu.Nazwa</MudTd>
+            <MudTd DataLabel="Liczba obywateli">@context.LiczbaObywateli</MudTd>
+            <MudTd DataLabel="HDI">@context.HDI</MudTd>
+            <MudTd><MudAvatar Image="@context.URLflagi" /></MudTd>
+        <MudTd><MudFab OnClick="(() => WyswietlPanstwo(context.ID))" Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled"></MudFab></MudTd>
+    </RowTemplate>
+</MudTable>
+<MudButton @onclick="UtworzPanstwo">DODAJ PAŃSTWO</MudButton>
+<MudButton href="/api/plik">POBIERZ TABELĘ</MudButton>
+
+@code 
+{
+    protected override async Task OnInitializedAsync()
+    {
+        await Serwis.WyswietlPanstwa();
+    }
+
+    void UtworzPanstwo()
+    {
+        NavigationManager.NavigateTo("/panstwo");
+    }
+
+    void WyswietlPanstwo(int id)
+    {
+        NavigationManager.NavigateTo($"panstwo/{id}");
+    }
+}

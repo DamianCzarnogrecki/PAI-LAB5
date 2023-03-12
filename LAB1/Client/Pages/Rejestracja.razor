@@ -1,0 +1,52 @@
+﻿@page "/rejestracja"
+@inject InterfejsSerwisuUzytkownika Serwis
+@inject NavigationManager NavigationManager
+
+<PageTitle>REJESTRACJA</PageTitle>
+<MudText Typo="Typo.h6" Class="px-4 mb-6">Rejestracja</MudText>
+
+<EditForm Model="uzytkownik">
+    <DataAnnotationsValidator />
+    <MudCard>
+        <MudCardContent>
+            <MudTextField Label="Login" Counter="64" Clearable="true" @bind-Value="uzytkownik.Login" For="@(() => uzytkownik.Login)"></MudTextField>
+            <MudTextField Label="Hasło" Counter="64" Clearable="true" @bind-Value="uzytkownik.Haslo" For="@(() => uzytkownik.Haslo)" InputType="@typTekstuHasla" Adornment="Adornment.End" AdornmentIcon="@ikonaHasla" OnAdornmentClick="UkrywanieHasla"></MudTextField>
+        </MudCardContent>
+    </MudCard>
+    <br />
+    <MudButton @onclick="Zarejestruj" Class="mr-4 mt-4">ZAREJESTRUJ SIĘ</MudButton>
+</EditForm>
+
+@code {
+
+    UzytkownikWprowadzony uzytkownik = new UzytkownikWprowadzony { };
+
+    async Task Zarejestruj()
+    {
+        uzytkownik.Login = uzytkownik.Login.ToString();
+        uzytkownik.Haslo = uzytkownik.Haslo.ToString();
+        await Serwis.Rejestracja(uzytkownik);
+        NavigationManager.NavigateTo("/login");
+    }
+
+    bool hasloWidoczne;
+    string ikonaHasla = Icons.Material.Filled.VisibilityOff;
+    InputType typTekstuHasla = InputType.Password;
+
+    void UkrywanieHasla()
+    {
+        @if (hasloWidoczne == true)
+        {
+            hasloWidoczne = false;
+            ikonaHasla = Icons.Material.Filled.VisibilityOff;
+            typTekstuHasla = InputType.Password;
+        }
+        else
+        {
+            hasloWidoczne = true;
+            ikonaHasla = Icons.Material.Filled.Visibility;
+            typTekstuHasla = InputType.Text;
+        }
+    }
+
+}

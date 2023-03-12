@@ -1,0 +1,90 @@
+﻿@page "/panstwo"
+@page "/panstwo/{id:int}"
+@inject InterfejsSerwisuPanstwa Serwis
+
+<PageTitle>DODAJ/ZMIEŃ PAŃSTWO</PageTitle>
+
+<EditForm Model="panstwo" OnValidSubmit="UtworzLubZmodyfikujPanstwo">
+    <DataAnnotationsValidator />
+    <MudCard>
+        <MudCardContent>
+            <MudNumericField Label="ID" @bind-Value="panstwo.ID" For="@(() => panstwo.ID)"></MudNumericField>
+            <MudTextField Label="Nazwa powszechna" @bind-Value="panstwo.NazwaPowszechna" For="@(() => panstwo.NazwaPowszechna)"></MudTextField>
+            <MudTextField Label="Nazwa oficjalna" @bind-Value="panstwo.NazwaOficjalna" For="@(() => panstwo.NazwaOficjalna)"></MudTextField>
+            <MudTextField Label="Kod ISO3166" @bind-Value="panstwo.KodISO3166" For="@(() => panstwo.KodISO3166)"></MudTextField>
+            <MudSelect Label="Typ rządu" @bind-Value="panstwo.TypRzaduID">
+                @foreach (var typRzadu in Serwis.TypyRzadu)
+                {
+                    <MudSelectItem Value="@typRzadu.ID">@typRzadu.Nazwa</MudSelectItem>
+                }
+            </MudSelect>
+            <MudNumericField Label="Liczba obywateli" @bind-Value="panstwo.LiczbaObywateli" For="@(() => panstwo.LiczbaObywateli)"></MudNumericField>
+            <MudNumericField Label="HDI" @bind-Value="panstwo.HDI" For="@(() => panstwo.HDI)"></MudNumericField>
+            <MudTextField Label="Adres URL flagi" @bind-Value="panstwo.URLflagi" For="@(() => panstwo.URLflagi)"></MudTextField>
+        </MudCardContent>
+    </MudCard>
+    <br />
+    <MudButton ButtonType="ButtonType.Submit" Class="mr-4 mt-4">@tekstPrzycisku</MudButton>
+    <MudButton @onclick="UsunPanstwo" Class="mt-4">USUŃ PAŃSTWO</MudButton>
+</EditForm>
+<br/>
+<MudExpansionPanels>
+    <MudExpansionPanel Text="ID poszczególnych typów rządów">
+        @foreach (var typRzadu in Serwis.TypyRzadu)
+        {
+            <MudText>@typRzadu.ID</MudText>
+            <MudText>@typRzadu.Nazwa</MudText>
+            <br/>
+        }
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    [Parameter]
+    public int? ID { get; set; }
+    string tekstPrzycisku = "";
+    LAB1.Shared.Panstwo panstwo = new LAB1.Shared.Panstwo { TypRzadu = new TypRzadu() };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ID == null)
+        {
+            tekstPrzycisku = "DODAJ PAŃSTWO";
+        }
+        else
+        {
+            tekstPrzycisku = "ZMODYFIKUJ PAŃSTWO";
+        }
+        await Serwis.OdczytajTypRzadu();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ID == null)
+        {
+            panstwo.TypRzadu = Serwis.TypyRzadu[0];
+            panstwo.TypRzaduID = panstwo.TypRzadu.ID;
+        }
+        else
+        {
+            panstwo = await Serwis.WyswietlPanstwo((int)ID);
+        }
+    }
+
+    async Task UtworzLubZmodyfikujPanstwo()
+    {
+        if (ID == null)
+        {
+            await Serwis.UtworzPanstwo(panstwo);
+        }
+        else
+        {
+            await Serwis.ZmodyfikujPanstwo(panstwo);
+        }
+    }
+
+    async Task UsunPanstwo()
+    {
+        await Serwis.UsunPanstwo(panstwo.ID);
+    }
+}

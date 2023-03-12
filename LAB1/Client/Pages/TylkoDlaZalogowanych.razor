@@ -1,0 +1,84 @@
+﻿@page "/dlazalogowanych"
+@inject NavigationManager NavigationManager
+
+<PageTitle>DLA ZALOGOWANYCH</PageTitle>
+<MudText Typo="Typo.h6">Jak oceniasz tę aplikację?</MudText>
+<MudRating SelectedValue="1" />
+
+@if (@napisA != "")
+{
+    <MudAlert Severity="Severity.Info">@napisA</MudAlert>
+}
+<br />
+@if (@napisB != "")
+{
+    <MudAlert Severity="Severity.Info">@napisB</MudAlert>
+}
+<br />
+<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="(() => WyswietlKomunikat(1))">WYŚWIETL KOMUNIKAT A</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="(() => WyswietlKomunikat(2))">WYŚWIETL KOMUNIKAT B</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="Wyloguj">WYLOGUJ</MudButton>
+<br /><br />
+@if (komunikatA != "")
+{
+    <MudAlert Severity="Severity.Info">@komunikatA</MudAlert>
+}
+<br />
+@if (komunikatB != "")
+{
+    <MudAlert Severity="Severity.Info">@komunikatB</MudAlert>
+}
+
+@code {
+    string komunikatA = "";
+    string komunikatB = "";
+    string napisA = "";
+    string napisB = "";
+    bool rolaA = false;
+    bool rolaB = false;
+
+    protected override void OnParametersSet()
+    {
+        if (Token.JWT == "") NavigationManager.NavigateTo("/login");
+
+        CzyMaRole();
+
+        if (rolaA) napisA = "Jesteś przypisany do roli A (moderator)";
+        else napisA = "";
+
+        if(rolaB) napisB = "Jesteś przypisany do roli B (tester)";
+        else napisB = "";
+    }
+
+    void WyswietlKomunikat(int nr)
+    {
+        if(nr == 1)
+        {
+            if (rolaA) komunikatA = "Rola A - OK";
+            else komunikatA = "BRAK UPRAWNIEŃ ROLI A";
+        }
+
+        else if(nr == 2)
+        {
+            if (rolaB) komunikatB = "Rola B - OK";
+            else komunikatB = "BRAK UPRAWNIEŃ ROLI B";
+        }
+    }
+
+    void Wyloguj()
+    {
+        Token.JWT = "";
+        Token.Login = "";
+        Token.Roles = new List<string> { };
+        NavigationManager.NavigateTo("/");
+    }
+
+    void CzyMaRole()
+    {
+        foreach (string role in Token.Roles)
+        {
+            if (role.Contains("1")) rolaA = true;
+            if (role.Contains("2")) rolaB = true;
+        }
+    }
+}
